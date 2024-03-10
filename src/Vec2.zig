@@ -52,7 +52,7 @@ pub fn sub(self: Vec2, other: Vec2) Vec2 {
     };
 }
 
-/// Multiples the vector by a scalar.
+/// Multiplies the vector by a scalar.
 pub fn mul(self: Vec2, multiplier: f64) Vec2 {
     return Vec2{
         .x = self.x * multiplier,
