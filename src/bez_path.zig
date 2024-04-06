@@ -1,4 +1,27 @@
+const std = @import("std");
+const Allocator = std.mem.Allocator;
+
 const Point = @import("Point.zig");
+
+/// A Bézier path. It is represented as a list of `PathEl`s.
+///
+/// For an introduction of Bézier path,
+/// refer to [A Primer on Bézier Curves](https://pomax.github.io/bezierinfo/).
+pub const BezPath = struct {
+    elements: std.ArrayList(PathEl),
+
+    /// Creates a `BezPath` with empty path elements.
+    pub fn init(allocator: Allocator) !Allocator.Error!BezPath {
+        return .{
+            .elements = std.ArrayList(PathEl).init(allocator),
+        };
+    }
+
+    /// Release allocated memory.
+    pub fn deinit(self: BezPath) void {
+        self.elements.deinit();
+    }
+};
 
 /// The element of a Bézier path.
 ///
