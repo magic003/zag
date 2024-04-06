@@ -25,7 +25,7 @@ pub fn length(self: Vec2) f64 {
 }
 
 /// Magnitude squared of a vector.
-pub fn length_squared(self: Vec2) f64 {
+pub fn lengthSquared(self: Vec2) f64 {
     return self.dot(self);
 }
 
@@ -92,12 +92,12 @@ test length {
     try testing.expectEqual(5.0, v.length());
 }
 
-test length_squared {
+test lengthSquared {
     const v = Vec2{
         .x = 3.0,
         .y = 4.0,
     };
-    try testing.expectEqual(25.0, v.length_squared());
+    try testing.expectEqual(25.0, v.lengthSquared());
 }
 
 test normalize {
