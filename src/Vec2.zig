@@ -21,7 +21,7 @@ pub fn dot(self: Vec2, other: Vec2) f64 {
 
 /// Magnitude of a vector.
 pub fn length(self: Vec2) f64 {
-    return math.hypot(f64, self.x, self.y);
+    return math.hypot(self.x, self.y);
 }
 
 /// Magnitude squared of a vector.

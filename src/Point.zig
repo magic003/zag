@@ -27,7 +27,7 @@ pub fn midpoint(self: Point, other: Point) Point {
 pub fn distance(self: Point, other: Point) f64 {
     const x = self.x - other.x;
     const y = self.y - other.y;
-    return math.hypot(f64, x, y);
+    return math.hypot(x, y);
 }
 
 /// Adds the point to a directional vector and returns the new point.
