@@ -11,7 +11,7 @@ pub const BezPath = struct {
     elements: std.ArrayList(PathEl),
 
     /// Creates a `BezPath` with empty path elements.
-    pub fn init(allocator: Allocator) Allocator.Error!BezPath {
+    pub fn init(allocator: Allocator) BezPath {
         return .{
             .elements = std.ArrayList(PathEl).init(allocator),
         };
