@@ -29,8 +29,8 @@ pub const BezPath = struct {
     }
 
     /// Pushes a `PathEl` to the path. It panics if the first element of the path is not `PathEl.move_to`.
-    pub fn push(self: *BezPath, el: PathEl) void {
-        self.elements.append(el);
+    pub fn push(self: *BezPath, el: PathEl) Allocator.Error!void {
+        try self.elements.append(el);
         self.checkFirstIsMoveTo();
     }
 
@@ -38,9 +38,28 @@ pub const BezPath = struct {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
             if (!first.isMoveTo()) {
-                std.debug.panic("BezPath must begin with move_to");
+                @panic("BezPath must begin with move_to");
             }
         }
+    }
+
+    // Unit tests below
+    const testing = @import("std").testing;
+
+    test pop {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        try testing.expectEqual(null, bez_path.pop());
+
+        const move_to = PathEl{ .move_to = Point{
+            .x = 1.0,
+            .y = 2.0,
+        } };
+        try bez_path.push(move_to);
+
+        try testing.expectEqual(move_to, bez_path.pop());
+        try testing.expectEqual(0, bez_path.elements.items.len);
     }
 };
 
