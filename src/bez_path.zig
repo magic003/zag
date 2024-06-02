@@ -34,6 +34,11 @@ pub const BezPath = struct {
         self.checkFirstIsMoveTo();
     }
 
+    /// Pushes a `PathEl.move_to` element onto the path.
+    pub fn moveTo(self: *BezPath, p: Point) Allocator.Error!void {
+        try self.push(PathEl{ .move_to = p });
+    }
+
     fn checkFirstIsMoveTo(self: BezPath) void {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
@@ -86,6 +91,19 @@ pub const BezPath = struct {
         } };
 
         try testing.expectError(error.OutOfMemory, bez_path.push(move_to));
+    }
+
+    test moveTo {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const p = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(p);
+
+        try testing.expectEqual(PathEl{ .move_to = p }, bez_path.elements.items[0]);
     }
 };
 
