@@ -61,6 +61,32 @@ pub const BezPath = struct {
         try testing.expectEqual(move_to, bez_path.pop());
         try testing.expectEqual(0, bez_path.elements.items.len);
     }
+
+    test push {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const move_to = PathEl{ .move_to = Point{
+            .x = 1.0,
+            .y = 2.0,
+        } };
+        try bez_path.push(move_to);
+
+        try testing.expectEqual(1, bez_path.elements.items.len);
+        try testing.expectEqual(move_to, bez_path.pop());
+    }
+
+    test "push should fail when it's out of memory" {
+        var bez_path = BezPath.init(testing.failing_allocator);
+        defer bez_path.deinit();
+
+        const move_to = PathEl{ .move_to = Point{
+            .x = 1.0,
+            .y = 2.0,
+        } };
+
+        try testing.expectError(error.OutOfMemory, bez_path.push(move_to));
+    }
 };
 
 /// The element of a Bézier path.
