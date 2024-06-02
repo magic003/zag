@@ -31,7 +31,7 @@ pub const BezPath = struct {
     /// Pushes a `PathEl` to the path. It panics if the first element of the path is not `PathEl.move_to`.
     pub fn push(self: *BezPath, el: PathEl) Allocator.Error!void {
         try self.elements.append(el);
-        self.checkFirstIsMoveTo();
+        self.panicIfNotBeginWithMoveTo();
     }
 
     /// Pushes a `PathEl.move_to` element onto the path.
@@ -39,12 +39,23 @@ pub const BezPath = struct {
         try self.push(PathEl{ .move_to = p });
     }
 
-    fn checkFirstIsMoveTo(self: BezPath) void {
+    pub fn lineTo(self: *BezPath, p: Point) Allocator.Error!void {
+        self.panicIfPathIsEmpty();
+        try self.push(PathEl{ .line_to = p });
+    }
+
+    fn panicIfNotBeginWithMoveTo(self: BezPath) void {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
             if (!first.isMoveTo()) {
                 @panic("BezPath must begin with move_to");
             }
+        }
+    }
+
+    fn panicIfPathIsEmpty(self: BezPath) void {
+        if (self.elements.items.len == 0) {
+            @panic("Empty subpath. A subpath must begin with move_to");
         }
     }
 
@@ -104,6 +115,25 @@ pub const BezPath = struct {
         try bez_path.moveTo(p);
 
         try testing.expectEqual(PathEl{ .move_to = p }, bez_path.elements.items[0]);
+    }
+
+    test lineTo {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const origin = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(origin);
+
+        const p = Point{
+            .x = 3.0,
+            .y = 4.0,
+        };
+        try bez_path.lineTo(p);
+
+        try testing.expectEqual(PathEl{ .line_to = p }, bez_path.elements.items[1]);
     }
 };
 
