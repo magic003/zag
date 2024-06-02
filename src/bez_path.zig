@@ -39,9 +39,16 @@ pub const BezPath = struct {
         try self.push(PathEl{ .move_to = p });
     }
 
+    /// Pushes a `PathEl.line_to` element onto the path. It panics if the path is empty.
     pub fn lineTo(self: *BezPath, p: Point) Allocator.Error!void {
         self.panicIfPathIsEmpty();
         try self.push(PathEl{ .line_to = p });
+    }
+
+    /// Pushes a `PathEl.quad_to` element onto the path. It panics if the path is empty.
+    pub fn quadTo(self: *BezPath, p1: Point, p2: Point) Allocator.Error!void {
+        self.panicIfPathIsEmpty();
+        try self.push(PathEl{ .quad_to = [2]Point{ p1, p2 } });
     }
 
     fn panicIfNotBeginWithMoveTo(self: BezPath) void {
@@ -134,6 +141,29 @@ pub const BezPath = struct {
         try bez_path.lineTo(p);
 
         try testing.expectEqual(PathEl{ .line_to = p }, bez_path.elements.items[1]);
+    }
+
+    test quadTo {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const origin = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(origin);
+
+        const p1 = Point{
+            .x = 3.0,
+            .y = 4.0,
+        };
+        const p2 = Point{
+            .x = 5.0,
+            .y = 6.0,
+        };
+        try bez_path.quadTo(p1, p2);
+
+        try testing.expectEqual(PathEl{ .quad_to = [2]Point{ p1, p2 } }, bez_path.elements.items[1]);
     }
 };
 
