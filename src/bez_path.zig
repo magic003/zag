@@ -51,6 +51,12 @@ pub const BezPath = struct {
         try self.push(PathEl{ .quad_to = [2]Point{ p1, p2 } });
     }
 
+    /// Pushes a `PathEl.curve_to` element onto the path. It panics if the path is empty.
+    pub fn curveTo(self: *BezPath, p1: Point, p2: Point, p3: Point) Allocator.Error!void {
+        self.panicIfNotBeginWithMoveTo();
+        try self.push(PathEl{ .curve_to = [3]Point{ p1, p2, p3 } });
+    }
+
     fn panicIfNotBeginWithMoveTo(self: BezPath) void {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
@@ -164,6 +170,33 @@ pub const BezPath = struct {
         try bez_path.quadTo(p1, p2);
 
         try testing.expectEqual(PathEl{ .quad_to = [2]Point{ p1, p2 } }, bez_path.elements.items[1]);
+    }
+
+    test curveTo {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const origin = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(origin);
+
+        const p1 = Point{
+            .x = 3.0,
+            .y = 4.0,
+        };
+        const p2 = Point{
+            .x = 5.0,
+            .y = 6.0,
+        };
+        const p3 = Point{
+            .x = 7.0,
+            .y = 8.0,
+        };
+        try bez_path.curveTo(p1, p2, p3);
+
+        try testing.expectEqual(PathEl{ .curve_to = [3]Point{ p1, p2, p3 } }, bez_path.elements.items[1]);
     }
 };
 
