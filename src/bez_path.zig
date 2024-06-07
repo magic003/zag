@@ -57,6 +57,12 @@ pub const BezPath = struct {
         try self.push(PathEl{ .curve_to = [3]Point{ p1, p2, p3 } });
     }
 
+    /// Pushes a `PathEl.close_path` element onto the path. It panics if the path is empty.
+    pub fn closePath(self: *BezPath) Allocator.Error!void {
+        self.panicIfNotBeginWithMoveTo();
+        try self.push(PathEl{ .close_path = void{} });
+    }
+
     fn panicIfNotBeginWithMoveTo(self: BezPath) void {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
@@ -197,6 +203,21 @@ pub const BezPath = struct {
         try bez_path.curveTo(p1, p2, p3);
 
         try testing.expectEqual(PathEl{ .curve_to = [3]Point{ p1, p2, p3 } }, bez_path.elements.items[1]);
+    }
+
+    test closePath {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const p = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(p);
+
+        try bez_path.closePath();
+
+        try testing.expectEqual(PathEl{ .close_path = void{} }, bez_path.elements.items[1]);
     }
 };
 
