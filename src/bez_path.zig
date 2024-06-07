@@ -8,6 +8,7 @@ const Point = @import("Point.zig");
 /// For an introduction of Bézier path,
 /// refer to [A Primer on Bézier Curves](https://pomax.github.io/bezierinfo/).
 pub const BezPath = struct {
+    /// Elements in the path.
     elements: std.ArrayList(PathEl),
 
     /// Creates a `BezPath` with empty path elements.
@@ -218,6 +219,37 @@ pub const BezPath = struct {
         try bez_path.closePath();
 
         try testing.expectEqual(PathEl{ .close_path = void{} }, bez_path.elements.items[1]);
+    }
+
+    test "elements should include all added path elements" {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const origin = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(origin);
+
+        const p = Point{
+            .x = 3.0,
+            .y = 4.0,
+        };
+        try bez_path.lineTo(p);
+
+        try bez_path.closePath();
+
+        try testing.expectEqualSlices(PathEl, &[_]PathEl{
+            .{ .move_to = Point{
+                .x = 1.0,
+                .y = 2.0,
+            } },
+            .{ .line_to = Point{
+                .x = 3.0,
+                .y = 4.0,
+            } },
+            .{ .close_path = void{} },
+        }, bez_path.elements.items);
     }
 };
 
