@@ -293,6 +293,92 @@ pub const PathEl = union(enum) {
     }
 };
 
+/// The `PathEl` iterator interface.
+pub const PathElIter = struct {
+    ptr: *anyopaque,
+    nextFn: *const fn (ptr: *anyopaque) ?PathEl,
+
+    /// Returns a `PathElIter` interface using the provided implementation. It's intended to be called by the implementations.
+    fn init(ptr: anytype) PathElIter {
+        const T = @TypeOf(ptr);
+        const ptr_info = @typeInfo(T);
+        if (ptr_info != .Pointer) @compileError("ptr must be a pointer");
+        if (ptr_info.Pointer.size != .One) @compileError("ptr must be a single item pointer");
+
+        const gen = struct {
+            pub fn next(pointer: *anyopaque) ?PathEl {
+                const self: T = @ptrCast(@alignCast(pointer));
+                return @call(.always_inline, ptr_info.Pointer.child.next, .{self});
+            }
+        };
+
+        return .{
+            .ptr = ptr,
+            .nextFn = gen.next,
+        };
+    }
+
+    /// Returns the next `PathEl`.
+    pub fn next(self: PathElIter) ?PathEl {
+        return self.nextFn(self.ptr);
+    }
+
+    // Unit tests below
+    const testing = @import("std").testing;
+
+    test init {
+        const TestingPathElIter = struct {
+            index: usize = 0,
+
+            const Self = @This();
+
+            fn iter(self: *Self) PathElIter {
+                return PathElIter.init(self);
+            }
+
+            fn next(self: *Self) ?PathEl {
+                self.index += 1;
+                return switch (self.index) {
+                    1 => PathEl{
+                        .move_to = Point{
+                            .x = 1.0,
+                            .y = 2.0,
+                        },
+                    },
+                    2 => PathEl{
+                        .line_to = Point{
+                            .x = 3.0,
+                            .y = 4.0,
+                        },
+                    },
+                    3 => PathEl{
+                        .close_path = void{},
+                    },
+                    else => null,
+                };
+            }
+        };
+
+        var iter = @constCast(&TestingPathElIter{}).iter();
+        try testing.expectEqual(PathEl{
+            .move_to = Point{
+                .x = 1.0,
+                .y = 2.0,
+            },
+        }, iter.next());
+        try testing.expectEqual(PathEl{
+            .line_to = Point{
+                .x = 3.0,
+                .y = 4.0,
+            },
+        }, iter.next());
+        try testing.expectEqual(PathEl{
+            .close_path = void{},
+        }, iter.next());
+        try testing.expectEqual(null, iter.next());
+    }
+};
+
 test {
     std.testing.refAllDecls(@This());
 }
