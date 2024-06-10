@@ -64,6 +64,11 @@ pub const BezPath = struct {
         try self.push(PathEl{ .close_path = void{} });
     }
 
+    /// Returns a `PathElIter` which iterates over all elements in the path.
+    pub fn pathElements(self: *BezPath) BezPathElIter {
+        return BezPathElIter{ .path = self };
+    }
+
     fn panicIfNotBeginWithMoveTo(self: BezPath) void {
         if (self.elements.items.len > 0) {
             const first = self.elements.items[0];
@@ -78,6 +83,26 @@ pub const BezPath = struct {
             @panic("Empty subpath. A subpath must begin with move_to");
         }
     }
+
+    /// An implementation of `PathElIter` for this `BezPath`.
+    const BezPathElIter = struct {
+        path: *BezPath,
+        index: usize = 0,
+
+        pub fn iterator(self: *BezPathElIter) PathElIter {
+            return PathElIter.init(self);
+        }
+
+        pub fn next(self: *BezPathElIter) ?PathEl {
+            if (self.index >= self.path.elements.items.len) {
+                return null;
+            }
+
+            const el = self.path.elements.items[self.index];
+            self.index += 1;
+            return el;
+        }
+    };
 
     // Unit tests below
     const testing = @import("std").testing;
@@ -250,6 +275,41 @@ pub const BezPath = struct {
             } },
             .{ .close_path = void{} },
         }, bez_path.elements.items);
+    }
+
+    test pathElements {
+        var bez_path = BezPath.init(testing.allocator);
+        defer bez_path.deinit();
+
+        const origin = Point{
+            .x = 1.0,
+            .y = 2.0,
+        };
+        try bez_path.moveTo(origin);
+
+        const p = Point{
+            .x = 3.0,
+            .y = 4.0,
+        };
+        try bez_path.lineTo(p);
+
+        try bez_path.closePath();
+
+        const iter = @constCast(&bez_path.pathElements()).iterator();
+        try testing.expectEqual(PathEl{
+            .move_to = Point{
+                .x = 1.0,
+                .y = 2.0,
+            },
+        }, iter.next());
+        try testing.expectEqual(PathEl{
+            .line_to = Point{
+                .x = 3.0,
+                .y = 4.0,
+            },
+        }, iter.next());
+        try testing.expectEqual(PathEl{ .close_path = void{} }, iter.next());
+        try testing.expectEqual(null, iter.next());
     }
 };
 
