@@ -15,6 +15,16 @@ pub fn build(b: *std.Build) void {
     // set a preferred release mode, allowing the user to decide how to optimize.
     const optimize = b.standardOptimizeOption(.{});
 
+    // Add the module
+    _ = b.addModule("zag", .{
+        .root_source_file = .{
+            .src_path = .{
+                .owner = b,
+                .sub_path = "src/lib.zig",
+            },
+        },
+    });
+
     const lib = b.addStaticLibrary(.{
         .name = "zag",
         // In this case the main source file is merely a path, however, in more
